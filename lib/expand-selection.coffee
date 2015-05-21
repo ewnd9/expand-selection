@@ -1,6 +1,6 @@
 _ = require 'underscore-plus'
 {Range} = require 'atom'
-{Subscriber} = require 'emissary'
+{CompositeDisposable} = require 'atom'
 
 startPairMatches =
   '(': ')'
@@ -19,7 +19,6 @@ for startPair, endPair of startPairMatches
 
 module.exports =
 class ExpandSelection
-  Subscriber.includeInto(this)
 
   stringScope: 'string.quoted.'
   whitespaces: /^[ \t]*/
@@ -30,12 +29,14 @@ class ExpandSelection
   endPairRegExp: /[\)\]\}]/g
 
   constructor: ->
-    @subscribeToCommand atom.workspaceView, 'expand-selection:expand', =>
-      if editor = atom.workspace.getActiveEditor()
-        @expand(editor)
+    @subscriptions = new CompositeDisposable
+    @subscriptions.add atom.commands.add 'atom-workspace',
+      'expand-selection:expand': =>
+        if editor = atom.workspace.getActiveTextEditor()
+          @expand(editor)
 
   destroy: ->
-    @unsubscribe()
+    @subscriptions.dispose()
 
   # Find a suitable open bracket in the editor from a given position backward.
   # Borrowed some code from the atom's bracket-matcher package.
@@ -71,7 +72,7 @@ class ExpandSelection
               endPairPosition = range.start
               stop()
 
-    endPairPosition?.add([0, 1])
+    endPairPosition?.traverse([0, 1])
 
   expand: (editor) ->
     # First of all select the word under cursor if not already selected.
@@ -88,7 +89,7 @@ class ExpandSelection
 
       return editor.selectAll() if fullRange.isEqual(selection)
 
-      for scope in cursor.getScopes().slice().reverse()
+      for scope in cursor.getScopeDescriptor().getScopesArray().slice().reverse()
         # FIXME: Using the display buffer directly may not be the best choice.
         scopeRange = editor.displayBuffer.bufferRangeForScopeAtPosition(scope,
           cursorPosition)
@@ -134,9 +135,9 @@ class ExpandSelection
 
   # Shrink a range by a given amount.
   shrinkRange: (range, amount) ->
-    new Range(range.start.add([0, amount]), range.end.add([0, -amount]))
+    new Range(range.start.traverse([0, amount]), range.end.traverse([0, -amount]))
 
   # Check if range1 is a shrinked version of range2 by a given amount.
   isShrinkedRange: (range1, range2, amount) ->
-    range1.start.add([0, -amount]).isEqual(range2.start) and
-    range1.end.add([0, amount]).isEqual(range2.end)
+    range1.start.traverse([0, -amount]).isEqual(range2.start) and
+    range1.end.traverse([0, amount]).isEqual(range2.end)

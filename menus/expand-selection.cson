@@ -1,7 +1,11 @@
 # See https://atom.io/docs/latest/creating-a-package#menus for more details
 'context-menu':
-  '.overlayer':
-    'Expand selection': 'expand-selection:expand'
+  '.overlayer': [
+    {
+      'label': 'Expand selection'
+      'command': 'expand-selection:expand'
+    }
+  ]
 
 'menu': [
   {
