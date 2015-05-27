@@ -124,7 +124,7 @@ class ExpandSelection
         # does really contain the old one.
         if not scopeRange.isEqual(selection) and scopeRange.containsRange(
           selection)
-          editor.addSelectionForBufferRange(scopeRange)
+          cursor.selection?.setBufferRange(scopeRange)
           break
 
   # TODO: This can be optimized for sure.
