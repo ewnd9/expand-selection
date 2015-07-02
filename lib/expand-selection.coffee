@@ -99,9 +99,9 @@ class ExpandSelection
           scopeRange = @shrinkRange(scopeRange, 1) if not @isShrinkedRange(
             selection, scopeRange, 1)
         # Scope range is full row.
-        else if scope.indexOf('meta.') is 0
+        else if scope.indexOf('meta.') is 0 && scopeRange
           selection.end.column = scopeRange.end.column
-        else if scopeRange.containsRange(fullRange)
+        else if scopeRange?.containsRange(fullRange)
           # Before selecting the full line check for containing brackets.
           if startPosition = @findAnyStartPair(editor, selection.start)
             startPair = editor.getTextInRange(Range.fromPointWithDelta(
